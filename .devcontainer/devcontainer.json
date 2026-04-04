@@ -16,7 +16,8 @@
     "--security-opt=label=disable",
     "--security-opt=unmask=/sys/fs/cgroup",
     "--security-opt=systempaths=unconfined",
-    "--userns=host"
+    "--userns=host",
+    "--cgroupns=host"
   ],
 
   "mounts": [
@@ -36,7 +37,8 @@
     "AI_GIT_NAME": "${localEnv:AI_GIT_NAME}",
     "AI_GIT_EMAIL": "${localEnv:AI_GIT_EMAIL}",
     "AI_SSH_KEY_B64": "${localEnv:AI_SSH_KEY_B64}",
-    "AI_GPG_KEY_B64": "${localEnv:AI_GPG_KEY_B64}"
+    "AI_GPG_KEY_B64": "${localEnv:AI_GPG_KEY_B64}",
+    "AIBOX_HOST_USER": "${localEnv:USER}"
   },
 
   "postStartCommand": "bash /usr/local/bin/container-init.sh",

@@ -58,8 +58,8 @@ aibox() {
 
   local GITHUB_PAT_JSON
   GITHUB_PAT_JSON=$(bw get item "AI GitHub PAT") || { echo "❌ Failed to fetch GitHub PAT item."; return 1; }
-  AI_GIT_NAME=$(echo "$GITHUB_PAT_JSON" | jq -r '.fields[] | select(.name == "Git Name").value')
-  AI_GIT_EMAIL=$(echo "$GITHUB_PAT_JSON" | jq -r '.fields[] | select(.name == "Git Email").value')
+  local -x AI_GIT_NAME=$(echo "$GITHUB_PAT_JSON" | jq -r '.fields[] | select(.name == "Git Name").value')
+  local -x AI_GIT_EMAIL=$(echo "$GITHUB_PAT_JSON" | jq -r '.fields[] | select(.name == "Git Email").value')
   unset GITHUB_PAT_JSON
 
   local -x AI_SSH_KEY_B64=$(bw get notes "AI SSH Key" | base64 -b 0) || { echo "❌ Failed to fetch SSH key."; return 1; }
@@ -68,14 +68,19 @@ aibox() {
   local CONFIG_PATH="$HOME/.config/devcontainers/fedora-sandbox/devcontainer.json"
   echo "🚀 Starting AI Sandbox for: $(pwd)"
 
+  local rc=0
   if devcontainer up --workspace-folder . --config "$CONFIG_PATH" --docker-path podman; then
       echo "💻 Attaching to sandbox terminal..."
       devcontainer exec --workspace-folder . --config "$CONFIG_PATH" --docker-path podman zsh
   else
       echo "❌ Failed to start the AI Sandbox."
-      unset BW_SESSION ANTHROPIC_API_KEY CURSOR_API_KEY AI_GITHUB_TOKEN
-      unset AI_GIT_NAME AI_GIT_EMAIL AI_SSH_KEY_B64 AI_GPG_KEY_B64
+      rc=1
   fi
+
+  # Always scrub secrets from the host shell, regardless of success or failure.
+  unset BW_SESSION ANTHROPIC_API_KEY CURSOR_API_KEY AI_GITHUB_TOKEN
+  unset AI_GIT_NAME AI_GIT_EMAIL AI_SSH_KEY_B64 AI_GPG_KEY_B64
+  return $rc
 }
 
 # Attach to an existing AI Sandbox
@@ -127,10 +132,49 @@ aiattach() {
   fi
 }
 
+# ==============================================================================
+# AI Box Reverse Tunnel - Dynamically open ports to Mac Host
+# ==============================================================================
+
+tunnel() {
+    local MAC_USER="${AIBOX_HOST_USER:?AIBOX_HOST_USER is not set — launch via aibox to inject it}"
+
+    echo -n "🔌 Enter the port number to expose (e.g. 8080): "
+    read PORT
+
+    if ! [[ "$PORT" =~ ^[0-9]+$ ]]; then
+        echo "❌ Error: Port must be a number."
+        return 1
+    fi
+
+    if ss -tln | grep -q ":$PORT "; then
+        echo "⚠️  Warning: Port $PORT is currently in use by an app inside this container."
+        echo "   The tunnel will work, but make sure your app is running before testing."
+    fi
+
+    if ps aux | grep "[s]sh -R $PORT:localhost:$PORT" > /dev/null; then
+        echo "✅ Tunnel for port $PORT is already active!"
+        return 0
+    fi
+
+    echo "🚀 Initiating reverse tunnel for port $PORT as $MAC_USER..."
+    echo "   (You may be prompted for your Mac login password)"
+
+    ssh -f -N -R "$PORT:localhost:$PORT" "$MAC_USER@host.containers.internal"
+
+    if [ $? -eq 0 ]; then
+        echo "✨ Success! Port $PORT is now mapped."
+        echo "   Access it on your Mac at: http://localhost:$PORT"
+        echo "   To stop the tunnel later, run: pkill -f 'ssh -R $PORT'"
+    else
+        echo "❌ Failed to create tunnel. Ensure 'Remote Login' (SSH) is enabled on your Mac."
+    fi
+}
+
 alias -- gitca=__gitca
 alias -- gitcm='git add . ;git gen-commit'
 alias -- ll='eza -l'
 alias -- ls=eza
 alias -- lt='eza -a --tree --level=1'
-alias -- devc-update='curl -fsSL https://raw.githubusercontent.com/devcontainers/cli/main/scripts/install.sh | sh -s -- --update'
+alias -- devc-update='curl --proto "=https" --tlsv1.2 -fsSL https://raw.githubusercontent.com/devcontainers/cli/main/scripts/install.sh | sh -s -- --update'
 ZSH_HIGHLIGHT_HIGHLIGHTERS+=()

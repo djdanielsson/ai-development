@@ -7,9 +7,12 @@ set -euo pipefail
 # Runs every time the container starts (not just on first build).
 # ------------------------------------------------------------------
 
+# Restrictive umask so secret files (SSH keys, GPG keyring) are never
+# created world-readable, even momentarily before chmod runs.
+umask 077
+
 # --- SSH Setup ---
 mkdir -p /root/.ssh
-chmod 700 /root/.ssh
 
 # Embed GitHub's published SSH host keys directly instead of running ssh-keyscan,
 # which is vulnerable to MITM on first use.
@@ -51,6 +54,12 @@ if [ -n "$GPG_KEY" ]; then
 else
   echo "[init] WARNING: No GPG key found, commit signing disabled."
 fi
+
+# --- Scrub secret env vars ---
+# Keys have been written to disk / imported into keyrings; the base64
+# payloads are no longer needed and should not linger in the environment
+# where child processes (AI agents, shells) could read them.
+unset AI_SSH_KEY_B64 AI_GPG_KEY_B64
 
 # --- Pre-commit Hooks ---
 if [ -d .git ]; then

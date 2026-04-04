@@ -119,15 +119,20 @@ The `runArgs` in `devcontainer.json` intentionally weaken container isolation to
 - `--security-opt=seccomp=unconfined` -- Allows all syscalls (needed for nested containers)
 - `--security-opt=systempaths=unconfined` -- Exposes `/proc` and `/sys` paths
 - `--userns=host` -- Shares the host user namespace
+- `--cgroupns=host` -- Shares the host cgroup namespace (required for nested Podman cgroup delegation)
+
+The inner Podman is configured to use `cgroupfs` (not `systemd`) as its cgroup manager via `/etc/containers/containers.conf` in the image.
 
 This means the container boundary is **not a strong security boundary**. The sandbox relies on Podman's rootless mode and the ephemeral nature of the container for isolation.
 
 ### Secret Handling
 
 - Secrets are fetched from Vaultwarden via Touch ID and passed as environment variables
-- The `postStartCommand` writes the SSH key to the container filesystem (inside a volume)
+- The `postStartCommand` writes the SSH key to the container filesystem (inside a volume) under `umask 077` (no world-readable window)
 - GPG keys are imported into the container's GPG keyring (inside a volume)
-- On the host, shell variables are explicitly `unset` when the launcher function exits; however, this does **not** guarantee the memory pages are zeroed by the OS
+- After SSH/GPG setup, the base64-encoded secret env vars (`AI_SSH_KEY_B64`, `AI_GPG_KEY_B64`) are unset so they don't linger for child processes
+- On the host, shell variables are explicitly `unset` when the launcher function exits (both success and failure paths); however, this does **not** guarantee the memory pages are zeroed by the OS
+- All `curl|bash` installers enforce `--proto '=https' --tlsv1.2` to prevent TLS downgrade attacks
 
 ### SSH Host Key Verification
 

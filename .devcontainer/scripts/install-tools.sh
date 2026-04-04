@@ -9,7 +9,7 @@ set -euo pipefail
 # claude --version 2>/dev/null || echo "WARNING: claude version check unavailable"
 
 echo "==> Installing Cursor CLI..."
-curl -fsSL https://cursor.com/install | bash
+curl --proto '=https' --tlsv1.2 -fsSL https://cursor.com/install | bash
 cursor --version 2>/dev/null || echo "WARNING: cursor version check unavailable"
 
 # echo "==> Installing OpenCode CLI..."
