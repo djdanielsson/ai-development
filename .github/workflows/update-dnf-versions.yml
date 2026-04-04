@@ -21,7 +21,7 @@ jobs:
         run: dnf install -y git
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Resolve latest DNF package versions
         id: resolve
