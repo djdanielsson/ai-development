@@ -2,7 +2,7 @@
 # --- Base Image (pinned by version + digest for reproducibility) ---
 # Dependabot tracks the `fedora` image and opens PRs when new digests are published.
 # To update manually: podman inspect fedora:43 --format '{{.Digest}}'
-FROM fedora:43@sha256:8133c4b215c7338559cc137e24e92edc351b4cbabc1152d1f868d3fbc28aac5c
+FROM fedora:43@sha256:781b7642e8bf256e9cf75d2aa58d86f5cc695fd2df113517614e181a5eee9138
 
 # --- System Packages ---
 # Versions are locked to specific releases so builds are reproducible.
