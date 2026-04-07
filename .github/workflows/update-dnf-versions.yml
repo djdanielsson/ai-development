@@ -70,9 +70,11 @@ jobs:
             echo "$diff_summary" >> "$GITHUB_OUTPUT"
             echo "EOF" >> "$GITHUB_OUTPUT"
 
-            # Replace the block in-place using awk for multiline replacement
-            awk -v new="$new_block" '
-              /^ARG DNF_PACKAGES="/ { found=1; print new; next }
+            # Replace the block in-place using awk for multiline replacement.
+            # Pass via ENVIRON to avoid awk -v mangling backslashes.
+            export new_block
+            awk '
+              /^ARG DNF_PACKAGES="/ { found=1; print ENVIRON["new_block"]; next }
               found && /^"/ { found=0; next }
               found { next }
               { print }
