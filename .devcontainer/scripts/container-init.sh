@@ -25,7 +25,7 @@ KNOWN_HOSTS
 chmod 600 /root/.ssh/known_hosts
 
 if [ -n "${AI_SSH_KEY_B64:-}" ]; then
-  echo "$AI_SSH_KEY_B64" | base64 -d > /root/.ssh/id_ed25519
+  { printf '%s' "$AI_SSH_KEY_B64" | base64 -d | sed -n '/-----BEGIN/,/-----END/p'; echo; } > /root/.ssh/id_ed25519
   chmod 600 /root/.ssh/id_ed25519
   echo "[init] SSH key configured."
 else
@@ -56,9 +56,11 @@ else
 fi
 
 # --- Scrub secret env vars ---
-# Keys have been written to disk / imported into keyrings; the base64
-# payloads are no longer needed and should not linger in the environment
-# where child processes (AI agents, shells) could read them.
+# Keys have been written to disk / imported into keyrings. The base64
+# payloads are set via containerEnv (so they're available to postStartCommand)
+# which means unset here only clears them for this process. The decoded keys
+# on disk (/root/.ssh/id_ed25519, GPG keyring) are equally accessible, so
+# the containerEnv exposure doesn't widen the attack surface.
 unset AI_SSH_KEY_B64 AI_GPG_KEY_B64
 
 # --- Pre-commit Hooks ---

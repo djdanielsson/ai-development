@@ -121,7 +121,7 @@ The `runArgs` in `devcontainer.json` intentionally weaken container isolation to
 - `--userns=host` -- Shares the host user namespace
 - `--cgroupns=host` -- Shares the host cgroup namespace (required for nested Podman cgroup delegation)
 
-The inner Podman is configured to use `cgroupfs` (not `systemd`) as its cgroup manager via `/etc/containers/containers.conf` in the image.
+The inner Podman is configured to use `cgroupfs` (not `systemd`) as its cgroup manager via `/etc/containers/containers.conf` in the image, since the container does not run systemd.
 
 This means the container boundary is **not a strong security boundary**. The sandbox relies on Podman's rootless mode and the ephemeral nature of the container for isolation.
 

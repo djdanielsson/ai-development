@@ -30,14 +30,17 @@
     "source=${localEnv:HOME}/.zshrc,target=/root/.zshrc,type=bind,ro"
   ],
 
+  "containerEnv": {
+    "AI_GIT_NAME": "${localEnv:AI_GIT_NAME}",
+    "AI_GIT_EMAIL": "${localEnv:AI_GIT_EMAIL}",
+    "AI_SSH_KEY_B64": "${localEnv:AI_SSH_KEY_B64}",
+    "AI_GPG_KEY_B64": "${localEnv:AI_GPG_KEY_B64}"
+  },
+
   "remoteEnv": {
     "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}",
     "CURSOR_API_KEY": "${localEnv:CURSOR_API_KEY}",
     "GITHUB_TOKEN": "${localEnv:AI_GITHUB_TOKEN}",
-    "AI_GIT_NAME": "${localEnv:AI_GIT_NAME}",
-    "AI_GIT_EMAIL": "${localEnv:AI_GIT_EMAIL}",
-    "AI_SSH_KEY_B64": "${localEnv:AI_SSH_KEY_B64}",
-    "AI_GPG_KEY_B64": "${localEnv:AI_GPG_KEY_B64}",
     "AIBOX_HOST_USER": "${localEnv:USER}"
   },
 
