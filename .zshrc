@@ -83,53 +83,38 @@ aibox() {
   return $rc
 }
 
-# Attach to an existing AI Sandbox
-aiattach() {
-  # Grab the IDs of all running dev containers
-  local containers=$(podman ps -q --filter "label=devcontainer.local_folder")
+# ==============================================================================
+# AI Box Reverse Tunnel - Dynamically open ports to Mac Host
+# ==============================================================================
 
-  if [ -z "$containers" ]; then
-    echo "❌ No active AI Sandboxes found."
-    return 0
-  fi
+tunnel() {
+    echo -n "🔌 Enter the port number to expose (e.g. 8080): "
+    read PORT
 
-  echo "🔍 Active AI Sandboxes:"
+    # Validate input is a number
+    if ! [[ "$PORT" =~ ^[0-9]+$ ]]; then
+        echo "❌ Error: Port must be a number."
+        return 1
+    fi
 
-  # Arrays to hold our menu data
-  local i=1
-  local id_array=()
-  local name_array=()
+    # Strict duplicate check using ${PORT} to prevent Bash boundary errors
+    if ps aux | grep -q "[s]sh -R ${PORT}:localhost:${PORT}"; then
+        echo "✅ Tunnel for port $PORT is already active!"
+        return 0
+    fi
 
-  # Loop through IDs to get the human-readable folder names
-  for id in $(echo "$containers"); do
-    local folder=$(podman inspect --format='{{index .Config.Labels "devcontainer.local_folder"}}' "$id")
-    local name=$(basename "$folder")
+    echo "🚀 Initiating reverse tunnel for port $PORT..."
 
-    echo "  $i) $name"
-    id_array[$i]="$id"
-    name_array[$i]="$name"
-    i=$((i + 1))
-  done
+    # Use strict ${} wrapping and quotes to guarantee the colon survives
+    ssh -R "${PORT}:localhost:${PORT}" "$AIBOX_HOST_USER@host.containers.internal"
 
-  echo "  q) Quit"
-  echo -n "Select a sandbox to attach to: "
-  read choice
-
-  if [[ "$choice" == "q" || "$choice" == "Q" ]]; then
-    echo "Aborted."
-    return 0
-  fi
-
-  local target_id="${id_array[$choice]}"
-  local target_name="${name_array[$choice]}"
-
-  if [[ -n "$target_id" ]]; then
-    echo "🚀 Attaching to $target_name..."
-    # Drop cleanly into the running container natively!
-    podman exec -it "$target_id" zsh
-  else
-    echo "⚠️ Invalid selection."
-  fi
+    if [ $? -eq 0 ]; then
+        echo "✨ Success! Port $PORT is now mapped."
+        echo "   Access it on your Mac at: http://localhost:$PORT"
+        echo "   To stop this tunnel later, run: pkill -f 'ssh.*-R ${PORT}'"
+    else
+        echo "❌ Failed to create tunnel."
+    fi
 }
 
 # ==============================================================================
