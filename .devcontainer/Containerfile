@@ -34,11 +34,14 @@ RUN dnf install -y --setopt=install_weak_deps=False $DNF_PACKAGES && \
     rm -rf /var/cache/dnf
 
 # --- Nested Podman Configuration ---
-# The inner Podman must use cgroupfs (not systemd) because the container
-# does not run systemd and cannot delegate cgroup controllers via the
-# systemd cgroup driver. Without this, nested `podman run` fails with:
-#   "enabling controller cpu: write cgroup.subtree_control: operation not supported"
-RUN printf '[engine]\ncgroup_manager = "cgroupfs"\n' > /etc/containers/containers.conf
+# The outer container runtime does not delegate cgroup controllers, so the
+# inner Podman cannot create or manage cgroup subtrees. Setting
+# cgroups="disabled" under [containers] tells Podman to skip cgroup setup
+# entirely (resource limits on inner containers won't be enforced, which is
+# acceptable for a dev environment).
+# cgroup_manager="cgroupfs" is required (not systemd, which isn't running).
+# events_logger="file" avoids the missing systemd journal.
+RUN printf '[containers]\ncgroups = "disabled"\n\n[engine]\ncgroup_manager = "cgroupfs"\nevents_logger = "file"\n' > /etc/containers/containers.conf
 
 # --- AI Agents & Tools ---
 # These use curl|bash installers which are inherently unverifiable at build time.
