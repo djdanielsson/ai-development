@@ -83,6 +83,56 @@ aibox() {
   return $rc
 }
 
+# Attach to an existing AI Sandbox
+aiattach() {
+  # Grab the IDs of all running dev containers
+  local containers=$(podman ps -q --filter "label=devcontainer.local_folder")
+
+  if [ -z "$containers" ]; then
+    echo "❌ No active AI Sandboxes found."
+    return 0
+  fi
+
+  echo "🔍 Active AI Sandboxes:"
+
+  # Arrays to hold our menu data
+  local i=1
+  local id_array=()
+  local name_array=()
+
+  # Loop through IDs to get the human-readable folder names
+  for id in $(echo "$containers"); do
+    local folder=$(podman inspect --format='{{index .Config.Labels "devcontainer.local_folder"}}' "$id")
+    local name=$(basename "$folder")
+
+    echo "  $i) $name"
+    id_array[$i]="$id"
+    name_array[$i]="$name"
+    i=$((i + 1))
+  done
+
+  echo "  q) Quit"
+  echo -n "Select a sandbox to attach to: "
+  read choice
+
+  if [[ "$choice" == "q" || "$choice" == "Q" ]]; then
+    echo "Aborted."
+    return 0
+  fi
+
+  local target_id="${id_array[$choice]}"
+  local target_name="${name_array[$choice]}"
+
+  if [[ -n "$target_id" ]]; then
+    echo "🚀 Attaching to $target_name..."
+
+    # NEW: Dynamically inject the Mac host username during the native attach!
+    podman exec -e AIBOX_HOST_USER="$USER" -it "$target_id" zsh
+  else
+    echo "⚠️ Invalid selection."
+  fi
+}
+
 # ==============================================================================
 # AI Box Reverse Tunnel - Dynamically open ports to Mac Host
 # ==============================================================================
@@ -98,7 +148,7 @@ tunnel() {
     fi
 
     # Strict duplicate check using ${PORT} to prevent Bash boundary errors
-    if ps aux | grep -q "[s]sh -R ${PORT}:localhost:${PORT}"; then
+    if ps aux | grep -q "[s]sh -f -N -R ${PORT}:localhost:${PORT}"; then
         echo "✅ Tunnel for port $PORT is already active!"
         return 0
     fi
@@ -114,45 +164,6 @@ tunnel() {
         echo "   To stop this tunnel later, run: pkill -f 'ssh.*-R ${PORT}'"
     else
         echo "❌ Failed to create tunnel."
-    fi
-}
-
-# ==============================================================================
-# AI Box Reverse Tunnel - Dynamically open ports to Mac Host
-# ==============================================================================
-
-tunnel() {
-    local MAC_USER="${AIBOX_HOST_USER:?AIBOX_HOST_USER is not set — launch via aibox to inject it}"
-
-    echo -n "🔌 Enter the port number to expose (e.g. 8080): "
-    read PORT
-
-    if ! [[ "$PORT" =~ ^[0-9]+$ ]]; then
-        echo "❌ Error: Port must be a number."
-        return 1
-    fi
-
-    if ss -tln | grep -q ":$PORT "; then
-        echo "⚠️  Warning: Port $PORT is currently in use by an app inside this container."
-        echo "   The tunnel will work, but make sure your app is running before testing."
-    fi
-
-    if ps aux | grep "[s]sh -R $PORT:localhost:$PORT" > /dev/null; then
-        echo "✅ Tunnel for port $PORT is already active!"
-        return 0
-    fi
-
-    echo "🚀 Initiating reverse tunnel for port $PORT as $MAC_USER..."
-    echo "   (You may be prompted for your Mac login password)"
-
-    ssh -f -N -R "$PORT:localhost:$PORT" "$MAC_USER@host.containers.internal"
-
-    if [ $? -eq 0 ]; then
-        echo "✨ Success! Port $PORT is now mapped."
-        echo "   Access it on your Mac at: http://localhost:$PORT"
-        echo "   To stop the tunnel later, run: pkill -f 'ssh -R $PORT'"
-    else
-        echo "❌ Failed to create tunnel. Ensure 'Remote Login' (SSH) is enabled on your Mac."
     fi
 }
 
