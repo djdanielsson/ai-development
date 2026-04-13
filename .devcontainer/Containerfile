@@ -59,7 +59,7 @@ COPY scripts/install-tools.sh /tmp/install-tools.sh
 RUN chmod +x /tmp/install-tools.sh && /tmp/install-tools.sh && rm /tmp/install-tools.sh
 
 # --- Oh My Zsh (pinned to commit) ---
-ARG OHMYZSH_COMMIT="887a864aba396c0e6dcf7c0254f455676f830daa"
+ARG OHMYZSH_COMMIT="1708d84b70d38b8a9b2306f6b8e14bda287f3107"
 RUN git clone --depth 1 https://github.com/ohmyzsh/ohmyzsh.git /root/.oh-my-zsh && \
     cd /root/.oh-my-zsh && git fetch --depth 1 origin "$OHMYZSH_COMMIT" && \
     git checkout "$OHMYZSH_COMMIT"
