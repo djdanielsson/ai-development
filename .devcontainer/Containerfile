@@ -12,7 +12,7 @@ FROM docker.io/library/fedora:43@sha256:781b7642e8bf256e9cf75d2aa58d86f5cc695fd2
 # Dependabot cannot update these; run `scripts/update-dnf-versions.sh` to refresh.
 
 ARG DNF_PACKAGES="\
-    podman-5:5.8.1-1.fc43 \
+    podman-5:5.8.2-1.fc43 \
     curl-8.15.0-5.fc43 \
     git-2.53.0-1.fc43 \
     tar-2:1.35-6.fc43 \
@@ -22,15 +22,15 @@ ARG DNF_PACKAGES="\
     gh-2.87.3-1.fc43 \
     zsh-5.9-19.fc43 \
     fzf-0.70.0-1.fc43 \
-    eza-0.23.4-1.fc43 \
+    eza-0.23.4-2.fc43 \
     zoxide-0.9.8-1.fc43 \
     vim-enhanced-2:9.2.280-1.fc43 \
     gettext-envsubst-0.25.1-2.fc43 \
     jq-1.8.1-1.fc43 \
-    nodejs-1:22.22.0-2.fc43 \
-    unzip-6.0-67.fc43 \
     dnf5-5.2.18.0-2.fc43 \
     dnf5-plugins-5.2.18.0-2.fc43 \
+    nodejs-1:22.22.0-2.fc43 \
+    unzip-6.0-67.fc43 \
     libdnf5-5.2.18.0-2.fc43 \
     libdnf5-cli-5.2.18.0-2.fc43 \
     gnutls-3.8.12-1.fc43 \
