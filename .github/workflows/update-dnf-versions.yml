@@ -27,10 +27,35 @@ jobs:
         id: resolve
         run: |
           PACKAGES=(
-            podman curl git tar sudo procps-ng findutils gh zsh fzf eza zoxide
-            vim-enhanced gettext-envsubst jq
-            dnf5 dnf5-plugins libdnf5 libdnf5-cli
-            gnutls libssh libtasn1 systemd-standalone-sysusers
+            curl
+            dnf5
+            dnf5-plugins
+            eza
+            findutils
+            fzf
+            gettext-envsubst
+            gh
+            git
+            gnutls
+            jq
+            libdnf5
+            libdnf5-cli
+            libssh
+            libtasn1
+            nodejs
+            podman
+            procps-ng
+            python3
+            python3-pip
+            sudo
+            systemd-standalone-sysusers
+            tar
+            tox
+            unzip
+            uv
+            vim-enhanced
+            zoxide
+            zsh
           )
 
           BS=$'\x5c'
