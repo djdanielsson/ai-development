@@ -9,8 +9,35 @@ set -euo pipefail
 #
 
 PACKAGES=(
-  podman curl git tar sudo procps-ng findutils gh zsh fzf eza zoxide
-  vim-enhanced gettext-envsubst jq unzip nodejs
+  curl
+  dnf5
+  dnf5-plugins
+  eza
+  findutils
+  fzf
+  gettext-envsubst
+  gh
+  git
+  gnutls
+  jq
+  libdnf5
+  libdnf5-cli
+  libssh
+  libtasn1
+  nodejs
+  podman
+  procps-ng
+  python3
+  python3-pip
+  sudo
+  systemd-standalone-sysusers
+  tar
+  tox
+  unzip
+  uv
+  vim-enhanced
+  zoxide
+  zsh
 )
 
 # shellcheck disable=SC1003
